@@ -7600,7 +7600,7 @@ msgid "Loading reading positions…"
 msgstr "Загрузка позиций чтения…"
 
 #: cps/spa_strings.py cps/templates/book_review.html
-#: cps/templates/cover_picker.html
+#: cps/templates/cover_picker.html cps/templates/personal_rating.html
 msgid "Loading…"
 msgstr "Загрузка…"
 
@@ -8837,6 +8837,7 @@ msgid "Resume at {percent} from another device"
 msgstr "Продолжить с {percent} с другого устройства"
 
 #: cps/spa_strings.py cps/templates/book_review.html
+#: cps/templates/personal_rating.html
 msgid "Retry"
 msgstr "Повторить попытку"
 
@@ -11582,6 +11583,82 @@ msgid ""
 "can be downloaded but cannot be opened in the web reader."
 msgstr ""
 
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid "Could not load your rating."
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid "Could not save your rating."
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid "Household average"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/detail.html
+#: cps/templates/library_rating.html
+msgid "Library rating"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/user_edit.html
+msgid ""
+"Off by default. Only opted-in ratings count, and names are never shown. If "
+"you are the only person sharing a rating for a book, the average is your "
+"score."
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid "Save rating"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/user_edit.html
+msgid "Share my ratings in the household average"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/user_edit.html
+msgid "Show library rating"
+msgstr ""
+
+#: cps/spa_strings.py
+msgid "Show the labelled Calibre score alongside your own rating."
+msgstr ""
+
+#: cps/api/browse.py cps/spa_strings.py cps/templates/personal_rating.html
+#: cps/web.py
+msgid "Unrated"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid "Your rating"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid "Your rating saved."
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/_book_organizer.html
+msgid "Your rating, highest first"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/_book_organizer.html
+msgid "Your rating, lowest first"
+msgstr ""
+
+#: cps/spa_strings.py cps/templates/personal_rating.html
+msgid ""
+"Your score does not change the Calibre library rating. Sharing is off unless "
+"you opt in in your account."
+msgstr ""
+
+#: cps/spa_strings.py
+#, python-brace-format
+msgid "{rating} out of 5"
+msgstr ""
+
+#: cps/spa_strings.py
+msgid "Your rating (stars)"
+msgstr ""
+
 #: cps/tasks_status.py
 msgid "Waiting"
 msgstr "Ожидание"
@@ -11666,6 +11743,11 @@ msgstr "Издатель: %(name)s"
 #, python-format
 msgid "Series: %(serie)s"
 msgstr "Серия: %(serie)s"
+
+#: cps/web.py
+#, python-format
+msgid "Your rating: %(rating)s stars"
+msgstr ""
 
 #: cps/web.py
 msgid "Rating: None"
@@ -11815,6 +11897,10 @@ msgstr "Ошибка отображения скрытой полки"
 #: cps/templates/admin.html cps/templates/cwa_stats_i18n.html cps/web.py
 msgid "Downloads"
 msgstr "Скачивания"
+
+#: cps/web.py
+msgid "Your ratings"
+msgstr ""
 
 #: cps/web.py
 msgid "File formats list"
@@ -17011,14 +17097,6 @@ msgstr "Удалить «%(title)s» из вашей библиотеки?"
 msgid "It also leaves these shelves: %(shelves)s."
 msgstr "Она также покидает эти полки: %(shelves)s."
 
-#: cps/templates/detail.html
-msgid "Rating updated"
-msgstr "Рейтинг обновлён"
-
-#: cps/templates/detail.html
-msgid "Rating cleared"
-msgstr "Рейтинг удалён"
-
 #: cps/templates/detail.html cps/templates/listenmp3.html
 #, python-format
 msgid "Book %(index)s of %(range)s"
@@ -18152,6 +18230,11 @@ msgstr "ОК"
 msgid "Calibre-Web NextGen eBook Catalog"
 msgstr "Каталог электронных книг Calibre-Web NextGen"
 
+#: cps/templates/personal_rating.html
+#, python-format
+msgid "%(rating)s out of 5"
+msgstr ""
+
 #: cps/templates/read.html
 msgid "epub Reader"
 msgstr "читалка EPUB"
@@ -18419,8 +18502,16 @@ msgid "Exclude Extensions"
 msgstr "Исключить расширения"
 
 #: cps/templates/search_form.html
+msgid "Your rating above"
+msgstr ""
+
+#: cps/templates/search_form.html
 msgid "Rating Above"
 msgstr "Рейтинг выше"
+
+#: cps/templates/search_form.html
+msgid "Your rating below"
+msgstr ""
 
 #: cps/templates/search_form.html
 msgid "Rating Below"
@@ -19248,6 +19339,12 @@ msgstr "Показывать выбранные полки в OPDS"
 #: cps/templates/user_table.html
 msgid "Show Read/Unread Section"
 msgstr "Показать раздел прочитанного/непрочитанного"
+
+#~ msgid "Rating updated"
+#~ msgstr "Рейтинг обновлён"
+
+#~ msgid "Rating cleared"
+#~ msgstr "Рейтинг удалён"
 
 #~ msgid "Choose a SABnzbd connection"
 #~ msgstr "Выберите подключение SABnzbd"
@@ -20285,101 +20382,3 @@ msgstr "Показать раздел прочитанного/непрочит�
 #~ msgstr ""
 #~ "Перед безопасным удалением книги необходимо сначала заархивировать её и "
 #~ "синхронизировать устройство."
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Could not load your rating."
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Could not save your rating."
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Household average"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Library rating"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid ""
-"Off by default. Only opted-in ratings count, and names are never shown. "
-"If you are the only person sharing a rating for a book, the average is "
-"your score."
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Save rating"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Share my ratings in the household average"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Show library rating"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Show the labelled Calibre score alongside your own rating."
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Unrated"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating saved."
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating, highest first"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating, lowest first"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your score does not change the Calibre library rating. Sharing is off unless you opt in in your account."
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-#, python-brace-format
-msgid "{rating} out of 5"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-#, python-format
-msgid "%(rating)s out of 5"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your ratings"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-#, python-format
-msgid "Your rating: %(rating)s stars"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating (stars)"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating above"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Your rating below"
-msgstr ""
-
-#. #2248 personal ratings; explicit account consent.
-msgid "Calibre library rating (1-10)"
-msgstr ""
