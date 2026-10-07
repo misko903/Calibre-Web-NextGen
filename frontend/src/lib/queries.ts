@@ -10,6 +10,7 @@ import {
 import type { PickerBook } from './shelfPicker';
 import { removeBookFromCache, applyBookEditToCache } from './scrollCache';
 import { replaceCachedIdentity } from './identityCache';
+import { captureNamedPreferencesOwner, namedPreferencesMutationOptions } from './namedPreferencesMutation';
 import { advanceLibraryRevision, useLibraryRevision } from './libraryRevision';
 import { settleByBatch, settleById, type BulkFailureDetail } from './bulkResults';
 import { addShelfBooks } from './shelfAdd';
@@ -105,33 +106,17 @@ export function useUpdateSidebar() {
  * the server with an older request winning the race. */
 export function useUpdateNamedPreferences() {
   const queryClient = useQueryClient();
-  return useMutation({
-    scope: { id: 'named-user-preferences' },
-    mutationFn: (preferences: Record<string, boolean>) =>
-      apiPost<{ preferences: Record<string, boolean | null> }>(
-        '/api/v1/account/preferences', { preferences }),
-    onMutate: async (preferences) => {
-      await queryClient.cancelQueries({ queryKey: ['me'] });
-      const previous = queryClient.getQueryData<Me | null>(['me']);
-      queryClient.setQueryData<Me | null>(['me'], (current) => current ? {
-        ...current,
-        preferences: { ...(current.preferences ?? {}), ...preferences },
-      } : current);
-      return { previous };
-    },
-    onError: (_error, _preferences, context) => {
-      if (context) queryClient.setQueryData(['me'], context.previous);
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData<Me | null>(['me'], (current) => current ? {
-        ...current,
-        preferences: { ...(current.preferences ?? {}), ...data.preferences },
-      } : current);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['me'] });
-    },
-  });
+  const owner = captureNamedPreferencesOwner(queryClient);
+  const mutation = useMutation(namedPreferencesMutationOptions(queryClient, update =>
+    apiPost<{ preferences: Record<string, boolean | null> }>(
+      '/api/v1/account/preferences', { preferences: update.preferences, expected_user_id: update.ownerId })));
+  return {
+    ...mutation,
+    mutate: (preferences: Record<string, boolean>, options?: Parameters<typeof mutation.mutate>[1]) =>
+      mutation.mutate({ preferences, ...owner }, options),
+    mutateAsync: (preferences: Record<string, boolean>, options?: Parameters<typeof mutation.mutateAsync>[1]) =>
+      mutation.mutateAsync({ preferences, ...owner }, options),
+  };
 }
 
 export interface CatalogCustomFieldsUpdate {
@@ -364,7 +349,7 @@ export function useBooks(q: BooksQuery) {
   else if (readFilter !== 'all') params.set('filter', readFilter);
   if (showHidden && !entityKind && !view) params.set('show_hidden', '1');
   if (entityKind && entityId !== undefined && entityId !== '') {
-    params.set(entityKind, String(entityId));
+    params.set(entityKind === 'rating' && me && !me.role.anonymous ? 'personal_rating' : entityKind, String(entityId));
   }
   const query = useQuery<BooksPage>({
     queryKey: ['books', page, perPage, search, sort, readFilter,
@@ -409,7 +394,7 @@ const LIBRARY_VIEW_QUERIES = new Set([
   'discover-strip', 'account', 'me', 'about',
 ]);
 
-async function refreshLibraryViews(qc: QueryClient): Promise<void> {
+export async function refreshLibraryViews(qc: QueryClient): Promise<void> {
   const catalogQuery = (query: { queryKey: readonly unknown[] }) =>
     query.queryKey[0] === 'books' || query.queryKey[0] === 'adv-search';
   // Cancel before changing revision: an old request must not land beside the
@@ -596,10 +581,11 @@ export function useCcBooks(
 /** Fetch an entity-browse list (authors/series/tags/publishers/languages).
  *  `plural` is the endpoint segment (e.g. "authors"). */
 export function useEntityList(plural: string) {
-  return useQuery<EntityList>(createEntityListQueryOptions(
-    plural,
-    () => apiGet<EntityList>(`/api/v1/${plural}`),
-  ));
+  const me = useMe().data;
+  const endpoint = plural === 'ratings' && me && !me.role.anonymous ? 'personal-ratings' : plural;
+  const options = createEntityListQueryOptions(endpoint,
+    () => apiGet<EntityList>(`/api/v1/${endpoint}`));
+  return useQuery<EntityList>({ ...options, queryKey: [...options.queryKey, me?.id] });
 }
 
 /** The tag a rename collided with, carried on the 409 so the caller can offer
