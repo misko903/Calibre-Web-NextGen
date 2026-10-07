@@ -11039,6 +11039,46 @@ msgid "← Library"
 msgstr "← Bibliotheek"
 
 #: cps/spa_strings.py
+msgid "Add books"
+msgstr "Boeken toevoegen"
+
+#: cps/spa_strings.py
+msgid "Add books to shelf"
+msgstr "Boeken aan boekenplank toevoegen"
+
+#: cps/spa_strings.py
+msgid "Add selected"
+msgstr "Selectie toevoegen"
+
+#: cps/spa_strings.py
+msgid "Could not add the selected books. Please try again."
+msgstr ""
+"De geselecteerde boeken konden niet worden toegevoegd. Probeer het opnieuw."
+
+#: cps/spa_strings.py
+msgid "Could not load books."
+msgstr "Boeken konden niet worden geladen."
+
+#: cps/spa_strings.py
+msgid "On shelf"
+msgstr "Op boekenplank"
+
+#: cps/spa_strings.py
+msgid "Search library"
+msgstr "Bibliotheek doorzoeken"
+
+#: cps/spa_strings.py
+msgid "Search title, author, series…"
+msgstr "Zoek op titel, auteur, reeks…"
+
+#: cps/spa_strings.py
+#, python-brace-format
+msgid "{failed} of {total} books could not be added. They remain selected."
+msgstr ""
+"{failed} van {total} boeken konden niet worden toegevoegd. Ze blijven "
+"geselecteerd."
+
+#: cps/spa_strings.py
 msgid ""
 "New accounts sync only selected shelves. If no books arrive, add books to a "
 "shelf and enable its e-reader sync mark. Uncheck this to sync your whole "
@@ -18923,42 +18963,6 @@ msgstr "Synchroniseer geselecteerde boekenplanken met Kobo"
 #, fuzzy
 msgid "Show Read/Unread Section"
 msgstr "Toon gelezen/niet gelezen selectie"
-
-#: cps/spa_strings.py
-msgid "Add books"
-msgstr "Boeken toevoegen"
-
-#: cps/spa_strings.py
-msgid "Add books to shelf"
-msgstr "Boeken aan boekenplank toevoegen"
-
-#: cps/spa_strings.py
-msgid "Add selected"
-msgstr "Selectie toevoegen"
-
-#: cps/spa_strings.py
-msgid "Could not add the selected books. Please try again."
-msgstr "De geselecteerde boeken konden niet worden toegevoegd. Probeer het opnieuw."
-
-#: cps/spa_strings.py
-msgid "Could not load books."
-msgstr "Boeken konden niet worden geladen."
-
-#: cps/spa_strings.py
-msgid "On shelf"
-msgstr "Op boekenplank"
-
-#: cps/spa_strings.py
-msgid "Search library"
-msgstr "Bibliotheek doorzoeken"
-
-#: cps/spa_strings.py
-msgid "Search title, author, series…"
-msgstr "Zoek op titel, auteur, reeks…"
-
-#: cps/spa_strings.py
-msgid "{failed} of {total} books could not be added. They remain selected."
-msgstr "{failed} van {total} boeken konden niet worden toegevoegd. Ze blijven geselecteerd."
 
 #, fuzzy
 #~ msgid "Magic Shelves"
