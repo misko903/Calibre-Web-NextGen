@@ -535,6 +535,16 @@ class EPUBFixer:
             r'^\ufeff?\s*<\?xml[^>]*encoding=["\']([^"\']+)["\']',
             re.IGNORECASE
         )
+        # A comment that imitates a declaration (<!--?xml ...?-->) is debris
+        # from a tool that parsed a real declaration as markup. It is not one,
+        # but kepubify rewrites every such comment into a real declaration,
+        # wherever it sits, and a declaration anywhere but the very start is
+        # not well-formed XML, so every page of the KEPUB renders blank on a
+        # Kobo (#2506). Remove them all. Only the <!--?xml ...?--> shape is
+        # touched; kepubify leaves a comment without the closing ? alone.
+        commented_xml_decl_pattern = re.compile(
+            r'<!--\s*\?xml(?=[\s?])[^>]*?\?\s*-->', re.IGNORECASE
+        )
 
         for filename in list(self.files.keys()):
             ext = filename.split('.')[-1].lower()
@@ -565,6 +575,14 @@ class EPUBFixer:
                         )
                     self.files[filename] = updated
                 continue
+
+            if ext in ['html', 'htm', 'xhtml', 'xml', 'opf', 'ncx', 'svg']:
+                content, stripped = commented_xml_decl_pattern.subn('', content)
+                if stripped:
+                    self.files[filename] = content
+                    self.fixed_problems.append(
+                        f"Removed commented-out XML declaration in {filename}"
+                    )
 
             if ext in ['html', 'htm']:
                 updated = self._update_html_charset(content, declared_encoding)
