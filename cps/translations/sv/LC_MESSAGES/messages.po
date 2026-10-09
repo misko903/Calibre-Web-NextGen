@@ -8377,10 +8377,6 @@ msgstr "Föregående sida"
 msgid "Progress"
 msgstr "Förlopp"
 
-#: cps/spa_strings.py cps/templates/_reader_lookup_banner.html
-msgid "Progress is not being saved."
-msgstr ""
-
 #: cps/spa_strings.py
 msgid "Published after"
 msgstr "Publicerad efter"

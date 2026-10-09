@@ -8471,10 +8471,6 @@ msgstr "Vorige pagina"
 msgid "Progress"
 msgstr "Voortgang"
 
-#: cps/spa_strings.py cps/templates/_reader_lookup_banner.html
-msgid "Progress is not being saved."
-msgstr "Voortgang wordt niet opgeslagen."
-
 #: cps/spa_strings.py
 msgid "Published after"
 msgstr "Gepubliceerd na"
@@ -19062,6 +19058,9 @@ msgstr "Synchroniseer geselecteerde boekenplanken met Kobo"
 #, fuzzy
 msgid "Show Read/Unread Section"
 msgstr "Toon gelezen/niet gelezen selectie"
+
+#~ msgid "Progress is not being saved."
+#~ msgstr "Voortgang wordt niet opgeslagen."
 
 #, fuzzy
 #~ msgid "Rating updated"
