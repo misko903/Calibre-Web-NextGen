@@ -3562,6 +3562,11 @@ msgid "Convert failed."
 msgstr "轉換失敗"
 
 #: cps/spa_strings.py
+#, python-brace-format
+msgid "{format} is ready."
+msgstr ""
+
+#: cps/spa_strings.py
 msgid "Convert to"
 msgstr "轉換到"
 

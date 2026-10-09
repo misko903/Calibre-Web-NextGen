@@ -3779,6 +3779,11 @@ msgid "Convert failed."
 msgstr "Konverteringen misslyckades."
 
 #: cps/spa_strings.py
+#, python-brace-format
+msgid "{format} is ready."
+msgstr ""
+
+#: cps/spa_strings.py
 msgid "Convert to"
 msgstr "Konvertera till"
 

@@ -3893,6 +3893,7 @@ msgid "Convert failed."
 msgstr "La conversion a échoué."
 
 #: cps/spa_strings.py
+#, python-brace-format
 msgid "{format} is ready."
 msgstr "Le fichier {format} est prêt."
 
