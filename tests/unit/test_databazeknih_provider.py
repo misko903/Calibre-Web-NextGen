@@ -93,6 +93,14 @@ def dk():
     return _load_module()
 
 
+@pytest.fixture(autouse=True)
+def _stable_language_names(dk, monkeypatch):
+    """Under the full suite the real cps.isoLanguages is loaded and turns
+    'slk' into a localized name; pin it to the ISO code so assertions do not
+    depend on which test module imported cps first."""
+    monkeypatch.setattr(dk, "get_language_name", lambda _locale, code: code)
+
+
 # -- pure helpers ------------------------------------------------------------
 
 def test_normalize_strips_czech_and_slovak_diacritics(dk):
