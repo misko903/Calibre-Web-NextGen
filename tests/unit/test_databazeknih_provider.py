@@ -124,3 +124,26 @@ def test_refused_book_pages_report_the_refusal_when_nothing_was_read():
     with patch("requests.Session.get", side_effect=responses):
         with pytest.raises(requests.HTTPError):
             Databazeknih().search("Saturnin")
+
+
+@pytest.mark.parametrize("query,expected", [
+    ("isbn:978-80-7227-282-5", "9788072272825"),
+    ("ISBN: 80-7227-282-X", "807227282X"),
+    ("9788072272825", "9788072272825"),
+    ("1984", None),  # a title, not an ISBN
+    ("Babicka Nemcova", None),
+])
+def test_isbn_query_detection(query, expected):
+    assert Databazeknih._isbn_query(query) == expected
+
+
+def test_isbn_query_searches_by_isbn_and_keeps_only_the_top_hit():
+    responses = [
+        ok(fixture("databazeknih_search.html")),
+        ok(fixture("databazeknih_book.html")),
+        ok(fixture("databazeknih_more_info.html")),
+    ]
+    with patch("requests.Session.get", side_effect=responses) as get:
+        records = Databazeknih().search("isbn:978-80-7227-282-5")
+    assert get.call_args_list[0].args[0] == "https://www.databazeknih.cz/search?q=9788072272825"
+    assert [r.id for r in records] == ["saturnin-15"]

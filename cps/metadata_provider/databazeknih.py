@@ -11,6 +11,11 @@ emptying the result. Publisher/ISBN live in a block the book page loads
 lazily (``/book-detail-more-info/<id>``); it is fetched only when the page
 itself lacks them, and its failure is never fatal.
 
+A query of the form ``isbn:<isbn>`` (or a bare ISBN) searches by ISBN and
+keeps only the top hit. The auto-fetch uses it as a fallback when the title
+search misses, e.g. for a title stored without diacritics
+(``SUPPORTS_ISBN_QUERY``).
+
 Failure contract matches the other keyless scrapers (#303): unreachable
 network and parse failures return no results, an HTTP status refusal is
 raised so the search layer can name it instead of showing "no results".
@@ -34,6 +39,7 @@ log = logger.create()
 # Book slugs always end with the numeric book id: "saturnin-15".
 BOOK_HREF_RE = re.compile(r"(?:^|/)knihy/([\w-]+-(\d+))(?:[/?#]|$)")
 YEAR_RE = re.compile(r"\b(1[4-9]\d\d|20\d\d)\b")
+ISBN_QUERY_RE = re.compile(r"^\s*(?:isbn\s*:?\s*)?([\dXx][\dXx\s-]{8,20})\s*$", re.IGNORECASE)
 SERIES_POSITION_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*\.?\s*díl", re.IGNORECASE)
 
 LANGUAGE_MAP = {
@@ -88,6 +94,7 @@ class Databazeknih(Metadata):
     MORE_INFO_URL = "https://www.databazeknih.cz/book-detail-more-info/{}"
     TIMEOUT = (4, 10)
     MAX_RESULTS = 5
+    SUPPORTS_ISBN_QUERY = True
     HEADERS = {
         "User-Agent": constants.USER_AGENT,
         "Accept": "text/html,application/xhtml+xml",
@@ -97,11 +104,12 @@ class Databazeknih(Metadata):
     def search(self, query: str, generic_cover: str = "", locale: str = "en") -> List[MetaRecord]:
         if not self.active or not isinstance(query, str) or not query.strip():
             return []
-        tokens = " ".join(self.get_title_tokens(query, strip_joiners=False)) or query.strip()
+        isbn = self._isbn_query(query)
+        term = isbn or " ".join(self.get_title_tokens(query, strip_joiners=False)) or query.strip()
         session = requests.Session()
         session.headers.update(self.HEADERS)
         try:
-            response = session.get(self.SEARCH_URL.format(quote_plus(tokens)), timeout=self.TIMEOUT)
+            response = session.get(self.SEARCH_URL.format(quote_plus(term)), timeout=self.TIMEOUT)
             response.raise_for_status()
             html = response.text
         except requests.HTTPError as exc:
@@ -122,7 +130,9 @@ class Databazeknih(Metadata):
 
         records = []
         refusal = None
-        for slug in self._parse_search(html)[:self.MAX_RESULTS]:
+        # An ISBN names one book; further hits are full-text noise.
+        limit = 1 if isbn else self.MAX_RESULTS
+        for slug in self._parse_search(html)[:limit]:
             try:
                 response = session.get(self.BOOK_URL.format(slug), timeout=self.TIMEOUT)
                 response.raise_for_status()
@@ -139,6 +149,12 @@ class Databazeknih(Metadata):
         if refusal is not None and not records:
             raise refusal
         return records
+
+    @staticmethod
+    def _isbn_query(query: str) -> Optional[str]:
+        """The normalized ISBN if the query is "isbn:<isbn>" or a bare ISBN."""
+        match = ISBN_QUERY_RE.match(query)
+        return _valid_isbn(match.group(1)) if match else None
 
     @classmethod
     def _parse_search(cls, html: object) -> List[str]:
