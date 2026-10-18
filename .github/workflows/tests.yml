@@ -536,8 +536,13 @@ jobs:
     # bundle into the container. Backend/build PRs wait for integration-tests,
     # then load their own full image from the same GHA layer cache; otherwise a
     # branch API change would be tested against main's Python code.
+    #
+    # Only in the upstream repository. A fork's Build & Push skips the image
+    # build (no registry credentials), so the resolver below fails before any
+    # spec runs on every fork run (PR or main push). The summary's e2e gates
+    # carry the same owner check so a skipped job is not read as a failure.
     if: |
-      always() && (
+      always() && github.repository_owner == 'new-usemame' && (
       startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       github.ref == 'refs/heads/dev' ||
@@ -1143,13 +1148,14 @@ jobs:
           # Frontend PRs gate on the SPA e2e suite the same way (#1130). The
           # fork carve-out mirrors the e2e job's own continue-on-error, so the
           # two cannot disagree about what is being gated.
-          IS_FRONTEND_PR: ${{ needs.changed_paths.outputs.frontend == 'true' && github.event.pull_request.head.repo.fork != true }}
+          IS_FRONTEND_PR: ${{ needs.changed_paths.outputs.frontend == 'true' && github.event.pull_request.head.repo.fork != true && github.repository_owner == 'new-usemame' }}
           # Concurrency/engine-shaped PRs are a hard full-stack gate. Their E2E
           # job waits for the PR head's own sha-tagged image before starting.
-          IS_CONCURRENCY_PR: ${{ needs.changed_paths.outputs.concurrency == 'true' && github.event.pull_request.head.repo.fork != true }}
+          IS_CONCURRENCY_PR: ${{ needs.changed_paths.outputs.concurrency == 'true' && github.event.pull_request.head.repo.fork != true && github.repository_owner == 'new-usemame' }}
           # Every push to main runs and gates on the SPA e2e suite. Keep this
           # event-scoped so workflow_dispatch continues to honor run_e2e.
-          IS_MAIN_PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # The three e2e gates are upstream-only, like the e2e job itself.
+          IS_MAIN_PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner == 'new-usemame' }}
         run: |
           echo "Fast Tests:        ${{ needs.fast-tests.result }}"
           echo "Frontend Build:    ${{ needs.frontend-build.result }}"
