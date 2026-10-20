@@ -101,6 +101,13 @@ def _stable_language_names(dk, monkeypatch):
     monkeypatch.setattr(dk, "get_language_name", lambda _locale, code: code)
 
 
+@pytest.fixture(autouse=True)
+def _no_request_delay(dk, monkeypatch):
+    """The fake session answers instantly; skip the politeness delay so the
+    suite does not sleep. test_requests_are_spaced_out re-enables it."""
+    monkeypatch.setattr(dk.DatabazeKnih, "MIN_REQUEST_INTERVAL", 0)
+
+
 # -- pure helpers ------------------------------------------------------------
 
 def test_normalize_strips_czech_and_slovak_diacritics(dk):
@@ -347,6 +354,36 @@ def test_inactive_provider_returns_empty(dk):
     provider.set_status(False)
     assert provider.search("anything") == []
     assert provider.session.calls == []
+
+
+def test_user_agent_identifies_the_project(dk):
+    provider = dk.DatabazeKnih()
+    user_agent = provider.session.headers["User-Agent"]
+    assert user_agent == dk.constants.USER_AGENT
+    assert "Mozilla" not in user_agent
+
+
+def test_requests_are_spaced_out(dk, monkeypatch):
+    clock = {"now": 1000.0}
+    sleeps = []
+
+    def fake_sleep(seconds):
+        sleeps.append(seconds)
+        clock["now"] += seconds
+
+    monkeypatch.setattr(dk.time, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(dk.time, "sleep", fake_sleep)
+    monkeypatch.setattr(dk.DatabazeKnih, "MIN_REQUEST_INTERVAL", 0.5)
+    monkeypatch.setattr(dk.DatabazeKnih, "_last_request", 0.0)
+
+    base = _FakeSession.BASE
+    provider = _provider(dk, {f"{base}/": _FakeResponse(f"{base}/")})
+    provider._get(f"{base}/a")
+    provider._get(f"{base}/b")
+    clock["now"] += 2.0
+    provider._get(f"{base}/c")
+    # Only the back-to-back request waits, and only for the full interval.
+    assert sleeps == [pytest.approx(0.5)]
 
 
 def test_other_editions_parsed_from_more_info(dk):

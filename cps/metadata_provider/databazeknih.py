@@ -32,6 +32,8 @@ How the site is read (verified against the live site, 2026-10):
 
 import json
 import re
+import threading
+import time
 from html import escape
 import unicodedata
 from multiprocessing.pool import ThreadPool
@@ -41,7 +43,7 @@ from urllib.parse import quote, urljoin
 import requests
 from lxml.html import HtmlElement, fromstring
 
-from cps import logger
+from cps import constants, logger
 from cps.isoLanguages import get_language_name
 from cps.services.Metadata import MetaRecord, MetaSourceInfo, Metadata
 
@@ -336,11 +338,15 @@ class DatabazeKnih(Metadata):
     # the auto-fetch may retry this provider by the book's ISBN when the
     # title search misses (e.g. a title stored without diacritics).
     SUPPORTS_ISBN_QUERY = True
+    # Minimum gap between two requests to the site, shared by every thread
+    # and instance: one search fans out to ~10-30 page loads, which should
+    # not hit a community-run site in a single burst.
+    MIN_REQUEST_INTERVAL = 0.5
+    _throttle_lock = threading.Lock()
+    _last_request = 0.0
     HEADERS = {
-        "User-Agent": (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-        ),
+        # Identify the project honestly instead of posing as a browser.
+        "User-Agent": constants.USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "cs,sk;q=0.9,en;q=0.6",
     }
@@ -352,7 +358,17 @@ class DatabazeKnih(Metadata):
 
     # -- network -----------------------------------------------------------
 
+    def _throttle(self) -> None:
+        """Wait until MIN_REQUEST_INTERVAL has passed since the last request."""
+        cls = type(self)
+        with cls._throttle_lock:
+            wait = cls._last_request + self.MIN_REQUEST_INTERVAL - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)
+            cls._last_request = time.monotonic()
+
     def _get(self, url: str, **kwargs) -> requests.Response:
+        self._throttle()
         try:
             response = self.session.get(url, timeout=self.TIMEOUT, **kwargs)
             response.raise_for_status()
@@ -517,6 +533,7 @@ class DatabazeKnih(Metadata):
         big = big_cover_candidate(cover)
         if big:
             try:
+                self._throttle()
                 head = self.session.head(big, timeout=5, allow_redirects=True)
                 if head.ok and head.headers.get("content-type", "").startswith("image/"):
                     cover = big
