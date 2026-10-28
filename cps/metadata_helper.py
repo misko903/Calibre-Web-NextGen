@@ -211,7 +211,11 @@ def _apply_metadata_to_book(book, metadata, calibre_db_instance) -> bool:
                 if author_name and author_name.strip():
                     author = calibre_db_instance.get_author_by_name(author_name.strip())
                     if not author:
-                        author = db.Authors(author_name.strip(), author_name.strip())
+                        # Same sort rule as a manual edit (editbooks), so a
+                        # fetched "Milan Lasica" files under L, not under M.
+                        from cps.helper import get_sorted_author
+                        author = db.Authors(author_name.strip(),
+                                            get_sorted_author(author_name.strip()))
                         calibre_db_instance.session.add(author)
                     book.authors.append(author)
             updated = True

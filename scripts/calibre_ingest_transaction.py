@@ -19,6 +19,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import stat
 import struct
@@ -473,6 +474,67 @@ def marker_type(digest):
     return MARKER_PREFIX + digest
 
 
+# "Surname, Given" with exactly one comma and something on both sides.
+_SORT_FORM_AUTHOR = re.compile(r"^\s*([^,]+?)\s*,\s*([^,]+?)\s*$")
+# "King, Jr." / "Gates, III" is a name with a suffix, not a reversed name.
+_AUTHOR_NAME_SUFFIXES = frozenset(("jr", "sr", "ii", "iii", "iv", "v", "phd", "md", "esq"))
+
+
+def restore_sort_form_author_names(metadata):
+    """Turn author names stored in sort form back into display form.
+
+    Many EPUBs, especially Czech and Slovak releases, write the author's
+    sort form into the display name as well:
+    ``<dc:creator opf:file-as="Lasica, Milan">Lasica, Milan</dc:creator>``.
+    Calibre takes the element text as the author's name, so the book lands in
+    the library under "Lasica, Milan" and the author list fills up with
+    reversed names that never merge with the same author imported correctly.
+
+    A name is reversed only when it is unambiguously a sort form: exactly one
+    comma with text on both sides, a declared sort equal to the name itself
+    (or no declared sort at all), and no name suffix such as "Jr." after the
+    comma. The original form is kept as the author's sort value.
+
+    :param metadata: Calibre ``Metadata`` read from the incoming file.
+    :return: True when at least one author name was changed.
+    """
+    authors = list(getattr(metadata, "authors", None) or [])
+    if not authors:
+        return False
+    sort_map = dict(getattr(metadata, "author_sort_map", None) or {})
+    book_sort = (getattr(metadata, "author_sort", None) or "").strip()
+
+    changed = False
+    restored = []
+    restored_sort_map = {}
+    for name in authors:
+        name = name or ""
+        declared_sort = sort_map.get(name)
+        if declared_sort is None and len(authors) == 1 and book_sort:
+            declared_sort = book_sort
+        match = _SORT_FORM_AUTHOR.match(name)
+        if (match
+                and (declared_sort is None or declared_sort.strip() == name.strip())
+                and match.group(2).rstrip(".").lower() not in _AUTHOR_NAME_SUFFIXES):
+            surname, given = match.groups()
+            display = f"{given} {surname}"
+            restored.append(display)
+            restored_sort_map[display] = name.strip()
+            changed = True
+        else:
+            restored.append(name)
+            if name in sort_map:
+                restored_sort_map[name] = sort_map[name]
+
+    if changed:
+        metadata.authors = restored
+        metadata.author_sort_map = restored_sort_map
+        if not book_sort or book_sort == " & ".join(authors):
+            metadata.author_sort = " & ".join(
+                restored_sort_map.get(display, display) for display in restored)
+    return changed
+
+
 def apply_overrides(metadata, values):
     if values.get("title"):
         metadata.title = str(values["title"])
@@ -508,6 +570,7 @@ def prepare_book(path, overrides):
             metadata.title = os.path.splitext(os.path.basename(imported_path))[0]
         if not metadata.authors:
             metadata.authors = ["Unknown"]
+        restore_sort_form_author_names(metadata)
         apply_overrides(metadata, overrides)
         # The temporary directory must remain alive until Calibre has copied
         # the format, so materialize the operation inside this context.
